@@ -1,8 +1,9 @@
 import unittest
 
 from block_markdown import BlockType
+from htmlnode import HtmlNode
 from textnode import TextNode, TextType
-from utils.utils import block_to_block_type, extract_markdown_images, extract_markdown_links, markdown_to_blocks, split_nodes_delimiter, split_nodes_image, split_nodes_link, text_node_to_html_node, text_to_textnodes
+from utils.utils import block_to_block_type, extract_markdown_images, extract_markdown_links, get_heading_tag, heading_type_block_to_html_node, markdown_to_blocks, split_nodes_delimiter, split_nodes_image, split_nodes_link, text_node_to_html_node, text_to_textnodes
 
 
 class TestTextNode(unittest.TestCase):
@@ -260,7 +261,7 @@ This is the same paragraph on a new line
         block_type = block_to_block_type(block_h1)
         self.assertEqual(block_type, BlockType.HEADING)
 
-        block_h6 = "# This is an H6"
+        block_h6 = "###### This is an H6"
         block_type = block_to_block_type(block_h6)
         self.assertEqual(block_type, BlockType.HEADING)
 
@@ -272,3 +273,21 @@ This is the same paragraph on a new line
         block_not_heading = "############ This is not an heading"
         block_type = block_to_block_type(block_not_heading)
         self.assertEqual(block_type, BlockType.PARAGRAPH)
+
+    def test_get_heading_tag(self):
+        pre = "## "
+        tag = get_heading_tag(pre)
+        self.assertEqual(tag, 'h2')
+
+        pre = "#### "
+        tag = get_heading_tag(pre)
+        self.assertEqual(tag, 'h4')
+
+        pre = "# "
+        tag = get_heading_tag(pre)
+        self.assertEqual(tag, 'h1')
+
+    def test_heading_type_block_to_html_node(self):
+        block = "###### This is an H6"
+        node = heading_type_block_to_html_node(block)
+        self.assertEqual(node, HtmlNode('h6', 'This is an H6'))

@@ -1,3 +1,4 @@
+from functools import reduce
 import re
 from block_markdown import BlockType
 from htmlnode import HtmlNode
@@ -174,5 +175,38 @@ def block_to_block_type(block: str):
 
 def markdown_to_html_node(markdown):
     blocks = markdown_to_blocks(markdown)
+
+    nodes = map(handle_block_by_type, blocks)
+
+def handle_block_by_type(block):
+    match(block_to_block_type(block)):
+        case BlockType.HEADING:
+            return 
+        
+def get_heading_tag(matched_markdown_pre):
+    num = reduce(lambda a, c: a+1 if c=="#" else a, matched_markdown_pre, 0)
+    return f"h{num}"
     
-    
+def heading_type_block_to_html_node(block):
+    matched = re.findall(r"(^#{1,6} )", block)
+    heading_tag = get_heading_tag(matched[0])
+    stripped = block.replace(matched[0], '')
+
+    return HtmlNode(heading_tag, stripped)
+
+def block_to_node(block: str, block_type: BlockType):
+    match(block_type):
+        case BlockType.PARAGRAPH:
+            return TextNode(block)
+        case BlockType.HEADING:
+            return heading_type_block_to_html_node(block)
+        case BlockType.CODE:
+            return ''
+        case BlockType.QUOTE:
+            return ''
+        case BlockType.UNORDERED_LIST:
+            return ''
+        case BlockType.ORDERED_LIST:
+            return ''
+        case _:
+            raise Exception('Uknown type')
