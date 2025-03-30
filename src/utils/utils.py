@@ -2,6 +2,8 @@ from functools import reduce
 import re
 from block_markdown import BlockType
 from htmlnode import HtmlNode
+from leafnode import LeafNode
+from parentnode import ParentNode
 from textnode import TextNode, TextType
 
 
@@ -11,17 +13,17 @@ def text_node_to_html_node(text_node: TextNode):
         
         match text_node.text_type:
             case TextType.TEXT:
-                return HtmlNode(value=text_node.text)
+                return LeafNode('',value=text_node.text)
             case TextType.BOLD:
-                return HtmlNode('b', value=text_node.text)
+                return LeafNode('b', value=text_node.text)
             case TextType.ITALIC:
-                return HtmlNode('i', value=text_node.text)
+                return LeafNode('i', value=text_node.text)
             case TextType.CODE:
-                return HtmlNode('code', value=text_node.text)
+                return LeafNode('code', value=text_node.text)
             case TextType.LINK:
-                return HtmlNode('a', value=text_node.text, props={'href': text_node.url})
+                return LeafNode('a', value=text_node.text, props={'href': text_node.url})
             case TextType.IMAGE:
-                return HtmlNode('img', props={'src': text_node.url, 'alt': text_node.url})
+                return LeafNode('img', value='', props={'src': text_node.url, 'alt': text_node.url})
             case _:
                 raise ValueError('Not a known text type format.')
             
@@ -162,7 +164,7 @@ def block_to_block_type(block: str):
 
     if re.match(r"^#{1,6} ", block):
         return BlockType.HEADING
-    if block.startswith("``") and block.endswith("```"):
+    if block.startswith("```") and block.endswith("```"):
         return BlockType.CODE
     if check_every_line_start_with(block.split('\n'), '>'):
         return BlockType.QUOTE
@@ -172,11 +174,6 @@ def block_to_block_type(block: str):
         return BlockType.ORDERED_LIST
     
     return BlockType.PARAGRAPH
-
-def markdown_to_html_node(markdown):
-    blocks = markdown_to_blocks(markdown)
-
-    nodes = map(handle_block_by_type, blocks)
 
 def handle_block_by_type(block):
     match(block_to_block_type(block)):
@@ -194,10 +191,16 @@ def heading_type_block_to_html_node(block):
 
     return HtmlNode(heading_tag, stripped)
 
+def get_paragraph_html(text):
+    nodes = text_to_textnodes(text)
+    html_nodes = map(text_node_to_html_node, nodes)
+
+    return ParentNode('p', children=html_nodes)
+
 def block_to_node(block: str, block_type: BlockType):
     match(block_type):
         case BlockType.PARAGRAPH:
-            return TextNode(block)
+            return get_paragraph_html(block)
         case BlockType.HEADING:
             return heading_type_block_to_html_node(block)
         case BlockType.CODE:
@@ -209,4 +212,11 @@ def block_to_node(block: str, block_type: BlockType):
         case BlockType.ORDERED_LIST:
             return ''
         case _:
-            raise Exception('Uknown type')
+            raise Exception('Unknown type')
+    
+def markdown_to_html_node(markdown):
+    blocks = markdown_to_blocks(markdown)
+
+    nodes = map(handle_block_by_type, blocks)
+
+    return ParentNode('div', list(nodes))

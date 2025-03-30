@@ -9,7 +9,15 @@ class HtmlNode():
         self.props = props
 
     def to_html(self):
-        raise NotImplementedError
+        if self.tag == None and self.value:
+            return self.value
+        props = self.props_to_html()
+
+        if self.value == None and self.children:
+            children_html = map()
+            return f"<{self.tag}{' '+props if props else ''}>{self.children}</{self.tag}>"
+
+        return f"<{self.tag}{' '+props if props else ''}>{self.value}</{self.tag}>"
     
     def props_to_html(self):
         if self.props is None:
