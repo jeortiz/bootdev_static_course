@@ -3,7 +3,7 @@ import unittest
 from block_markdown import BlockType
 from htmlnode import HtmlNode
 from textnode import TextNode, TextType
-from utils.utils import block_to_block_type, extract_markdown_images, extract_markdown_links, get_heading_tag, get_paragraph_html, heading_type_block_to_html_node, markdown_to_blocks, split_nodes_delimiter, split_nodes_image, split_nodes_link, text_node_to_html_node, text_to_textnodes
+from utils.utils import block_to_block_type, block_to_node, extract_markdown_images, extract_markdown_links, get_heading_tag, get_paragraph_html, heading_type_block_to_html_node, markdown_to_blocks, split_nodes_delimiter, split_nodes_image, split_nodes_link, text_node_to_html_node, text_to_textnodes
 
 
 class TestTextNode(unittest.TestCase):
@@ -297,3 +297,18 @@ This is the same paragraph on a new line
         html = get_paragraph_html(text).to_html()
         
         self.assertEqual(html,'<p>This is another paragraph with <i>italic</i> text and <code>code</code> here\nThis is a paragraph on a new line</p>')
+
+    def test_block_to_node_quote(self):
+        block = ">This is a quote.\n>This is still quote."
+        node = block_to_node(block, BlockType.QUOTE)
+        self.assertEqual(node, HtmlNode('blockquote',"This is a quote.\nThis is still quote."))
+
+    def test_block_to_node_ul(self):
+        block = "- This is a list.\n- This is still list."
+        node = block_to_node(block, BlockType.UNORDERED_LIST).to_html()
+        self.assertEqual(node, "<ul><li>This is a list.</li><li>This is still list.</li></ul>")
+
+    def test_block_to_node_ol(self):
+        block = "1. This is a list.\n2. This is still list."
+        node = block_to_node(block, BlockType.ORDERED_LIST).to_html()
+        self.assertEqual(node, "<ol><li>This is a list.</li><li>This is still list.</li></ol>")

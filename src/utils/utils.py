@@ -189,7 +189,7 @@ def heading_type_block_to_html_node(block):
     heading_tag = get_heading_tag(matched[0])
     stripped = block.replace(matched[0], '')
 
-    return HtmlNode(heading_tag, stripped)
+    return LeafNode(heading_tag, stripped)
 
 def get_paragraph_html(text):
     nodes = text_to_textnodes(text)
@@ -204,13 +204,17 @@ def block_to_node(block: str, block_type: BlockType):
         case BlockType.HEADING:
             return heading_type_block_to_html_node(block)
         case BlockType.CODE:
-            return ''
+            return LeafNode('code', block.strip('`'))
         case BlockType.QUOTE:
-            return ''
+            return LeafNode('blockquote', re.sub(r"^>", '', block, flags=re.MULTILINE))
         case BlockType.UNORDERED_LIST:
-            return ''
+            stripped_block = re.sub(r"^- ", '', block, flags=re.MULTILINE)
+            children = map(lambda ln: LeafNode('li',ln), stripped_block.split('\n'))
+            return ParentNode('ul', children)
         case BlockType.ORDERED_LIST:
-            return ''
+            stripped_block = re.sub(r"^\d\. ", '', block, flags=re.MULTILINE)
+            children = map(lambda ln: LeafNode('li',ln), stripped_block.split('\n'))
+            return ParentNode('ol', children)
         case _:
             raise Exception('Unknown type')
     
@@ -219,4 +223,4 @@ def markdown_to_html_node(markdown):
 
     nodes = map(handle_block_by_type, blocks)
 
-    return ParentNode('div', list(nodes))
+    return ParentNode('div',list(nodes))
