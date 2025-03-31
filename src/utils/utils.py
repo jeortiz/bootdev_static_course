@@ -251,10 +251,11 @@ def publish_static_files():
     public_folder = 'public'
 
     try:
-        if os.path.isdir(public_folder):
+        if not os.path.exists(public_folder):
             shutil.rmtree(public_folder)
-            os.mkdir(public_folder)
-        
+
+        os.mkdir(public_folder)
+    
         copy_dir_files(static_folder, public_folder)
 
     except OSError as e:
@@ -304,9 +305,9 @@ def generate_page(from_path, template_path, dest_path):
 
     template = template.replace(r"{{ Content }}", content)
 
-    # if not os.path.exists(dest_path):
-    #     dirs = os.path.dirname(dest_path)
-    #     os.makedirs(dirs)
+    if not os.path.exists(dest_path):
+        dirs = os.path.dirname(dest_path)
+        os.makedirs(dirs, exist_ok=True)
 
     f = open(dest_path, "w")
     f.write(template)
