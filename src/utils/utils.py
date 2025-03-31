@@ -224,3 +224,12 @@ def markdown_to_html_node(markdown):
     nodes = map(handle_block_by_type, blocks)
 
     return ParentNode('div',list(nodes))
+
+def extract_title(markdown):
+    title_matches = re.findall(r"^#{1} (.+)", markdown)
+
+    if len(title_matches) == 0 or title_matches[0] == '':
+        raise Exception("No title specified!")
+    
+    return title_matches[0].strip()
+    
