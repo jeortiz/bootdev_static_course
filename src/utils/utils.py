@@ -1,5 +1,6 @@
 from functools import reduce
 import os
+from pathlib import Path
 import re
 import shutil
 from block_markdown import BlockType
@@ -251,11 +252,11 @@ def publish_static_files():
     public_folder = 'public'
 
     try:
-        if not os.path.exists(public_folder):
+        if os.path.exists(public_folder):
             shutil.rmtree(public_folder)
-
+       
         os.mkdir(public_folder)
-    
+
         copy_dir_files(static_folder, public_folder)
 
     except OSError as e:
@@ -313,8 +314,31 @@ def generate_page(from_path, template_path, dest_path):
     f.write(template)
     f.close()       
         
-    
-
     return
 
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    files = os.listdir(dir_path_content)
+
+    if len(files) == 0:
+        raise Exception('No content.')
+    try:
+        if not os.path.exists(dest_dir_path):
+            os.mkdir(dest_dir_path)
+        
+        for f in files:
+            f_path = os.path.join(dir_path_content, f)
+
+            if os.path.isfile(f_path):
+                dest_filename = Path(f_path).stem + '.html'
+                dest_dir = os.path.join(dest_dir_path,dest_filename)
+                generate_page(f_path,template_path,dest_dir)
+
+            elif os.path.isdir(f_path):
+                dest_dir = os.path.join(dest_dir_path,f)
+                generate_pages_recursive(f_path, template_path, dest_dir)
+
+    except OSError as e:
+        print(f"Failed - error: {e}")
+
+    return
     
