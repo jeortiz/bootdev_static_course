@@ -1,5 +1,7 @@
 from functools import reduce
+import os
 import re
+import shutil
 from block_markdown import BlockType
 from htmlnode import HtmlNode
 from leafnode import LeafNode
@@ -224,6 +226,36 @@ def markdown_to_html_node(markdown):
     nodes = map(handle_block_by_type, blocks)
 
     return ParentNode('div',list(nodes))
+
+def publish_static_files():
+    static_folder = '../static'
+    public_folder = '../public'
+
+    try:
+        if os.path.isdir(public_folder):
+            shutil.rmtree(public_folder)
+            os.mkdir(public_folder)
+            copy_dir_files(static_folder, public_folder)
+
+    except OSError as e:
+        print(f"Failed - error: {e}")
+    
+    return
+
+def copy_dir_files(src, dest):
+    files = os.listdir(src)
+
+    for f in files:
+        f_path = os.path.join(src,f)
+
+        if os.path.isfile(f_path):
+            shutil.copy(f_path, dest)
+        elif os.path.isdir(f_path):
+            dest_dir = os.path.join(dest,f)
+            os.mkdir(dest_dir)
+            copy_dir_files(f_path, dest_dir)
+    
+    return
 
 def extract_title(markdown):
     title_matches = re.findall(r"^#{1} (.+)", markdown)
