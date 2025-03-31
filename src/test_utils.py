@@ -2,6 +2,7 @@ import unittest
 
 from block_markdown import BlockType
 from htmlnode import HtmlNode
+from parentnode import ParentNode
 from textnode import TextNode, TextType
 from utils.utils import block_to_block_type, block_to_node, extract_markdown_images, extract_markdown_links, extract_title, get_heading_tag, get_paragraph_html, heading_type_block_to_html_node, markdown_to_blocks, split_nodes_delimiter, split_nodes_image, split_nodes_link, text_node_to_html_node, text_to_textnodes
 
@@ -296,22 +297,22 @@ This is the same paragraph on a new line
         text = "This is another paragraph with _italic_ text and `code` here\nThis is a paragraph on a new line"
         html = get_paragraph_html(text).to_html()
         
-        self.assertEqual(html,'<p>This is another paragraph with <i>italic</i> text and <code>code</code> here\nThis is a paragraph on a new line</p>')
+        self.assertEqual(html,'<div>This is another paragraph with <i>italic</i> text and <code>code</code> here\nThis is a paragraph on a new line</div>')
 
     def test_block_to_node_quote(self):
-        block = ">This is a quote.\n>This is still quote."
+        block = ">This is a quote.\n>\n>This is still quote."
         node = block_to_node(block, BlockType.QUOTE)
-        self.assertEqual(node, HtmlNode('blockquote',"This is a quote.\nThis is still quote."))
+        self.assertEqual(node.to_html(), "<div><blockquote>This is a quote.\n\nThis is still quote.</blockquote></div>")
 
     def test_block_to_node_ul(self):
         block = "- This is a list.\n- This is still list."
         node = block_to_node(block, BlockType.UNORDERED_LIST).to_html()
-        self.assertEqual(node, "<ul><li>This is a list.</li><li>This is still list.</li></ul>")
+        self.assertEqual(node, "<div><ul><li>This is a list.</li><li>This is still list.</li></ul></div>")
 
     def test_block_to_node_ol(self):
         block = "1. This is a list.\n2. This is still list."
-        node = block_to_node(block, BlockType.ORDERED_LIST).to_html()
-        self.assertEqual(node, "<ol><li>This is a list.</li><li>This is still list.</li></ol>")
+        node = block_to_node(block, BlockType.ORDERED_LIST)
+        self.assertEqual(node.to_html(), "<div><ol><li>This is a list.</li><li>This is still list.</li></ol></div>")
 
     def test_extract_title(self):
         markdown = "# Hello!"

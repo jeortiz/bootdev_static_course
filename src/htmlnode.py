@@ -14,8 +14,11 @@ class HtmlNode():
         props = self.props_to_html()
 
         if self.value == None and self.children:
-            children_html = map()
-            return f"<{self.tag}{' '+props if props else ''}>{self.children}</{self.tag}>"
+            children_html = ''
+            for child in self.children:
+                children_html += child.to_html()
+                
+            return f"<{self.tag}{' '+props if props else ''}>{children_html}</{self.tag}>"
 
         return f"<{self.tag}{' '+props if props else ''}>{self.value}</{self.tag}>"
     

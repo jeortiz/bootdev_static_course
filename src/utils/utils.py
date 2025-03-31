@@ -25,7 +25,7 @@ def text_node_to_html_node(text_node: TextNode):
             case TextType.LINK:
                 return LeafNode('a', value=text_node.text, props={'href': text_node.url})
             case TextType.IMAGE:
-                return LeafNode('img', value='', props={'src': text_node.url, 'alt': text_node.url})
+                return HtmlNode('img', value='', props={'src': text_node.url, 'alt': text_node.url})
             case _:
                 raise ValueError('Not a known text type format.')
             
@@ -178,9 +178,7 @@ def block_to_block_type(block: str):
     return BlockType.PARAGRAPH
 
 def handle_block_by_type(block):
-    match(block_to_block_type(block)):
-        case BlockType.HEADING:
-            return 
+    return block_to_node(block, block_to_block_type(block))
         
 def get_heading_tag(matched_markdown_pre):
     num = reduce(lambda a, c: a+1 if c=="#" else a, matched_markdown_pre, 0)
@@ -195,30 +193,50 @@ def heading_type_block_to_html_node(block):
 
 def get_paragraph_html(text):
     nodes = text_to_textnodes(text)
-    html_nodes = map(text_node_to_html_node, nodes)
+    html_nodes = list(map(text_node_to_html_node, nodes))
 
-    return ParentNode('p', children=html_nodes)
+    return ParentNode('div', children=html_nodes)
+
+def handle_children_text(text):
+    text_nodes = text_to_textnodes(text)
+    html_nodes = list(map(text_node_to_html_node, text_nodes))
+
+    return html_nodes
+
+def handle_list_children(items):
+    children = []
+    for item in items:
+        nodes = handle_children_text(item.strip(' '))
+        children.append(ParentNode('li', nodes))
+
+    return children
 
 def block_to_node(block: str, block_type: BlockType):
+    nodes = []
     match(block_type):
         case BlockType.PARAGRAPH:
-            return get_paragraph_html(block)
+            nodes =  handle_children_text(block)
         case BlockType.HEADING:
-            return heading_type_block_to_html_node(block)
+            nodes = [heading_type_block_to_html_node(block)]
         case BlockType.CODE:
-            return LeafNode('code', block.strip('`'))
+            nodes = [LeafNode('code', block.strip('`'))]
         case BlockType.QUOTE:
-            return LeafNode('blockquote', re.sub(r"^>", '', block, flags=re.MULTILINE))
+            text = re.sub(r"^>", '', block, flags=re.MULTILINE)
+            children = handle_children_text(text.strip(' '))
+            nodes = [ParentNode('blockquote', children)]
         case BlockType.UNORDERED_LIST:
             stripped_block = re.sub(r"^- ", '', block, flags=re.MULTILINE)
-            children = map(lambda ln: LeafNode('li',ln), stripped_block.split('\n'))
-            return ParentNode('ul', children)
+            # handle_children_text(stripped_block)
+            children = handle_list_children(stripped_block.split('\n'))
+            nodes = [ParentNode('ul', children)]
         case BlockType.ORDERED_LIST:
             stripped_block = re.sub(r"^\d\. ", '', block, flags=re.MULTILINE)
-            children = map(lambda ln: LeafNode('li',ln), stripped_block.split('\n'))
-            return ParentNode('ol', children)
+            children = handle_list_children(stripped_block.split('\n'))
+            nodes = [ParentNode('ol', children)]
         case _:
             raise Exception('Unknown type')
+        
+    return ParentNode('div', nodes)
     
 def markdown_to_html_node(markdown):
     blocks = markdown_to_blocks(markdown)
@@ -228,14 +246,16 @@ def markdown_to_html_node(markdown):
     return ParentNode('div',list(nodes))
 
 def publish_static_files():
-    static_folder = '../static'
-    public_folder = '../public'
+    print('\nCopying static files\n')
+    static_folder = 'static'
+    public_folder = 'public'
 
     try:
         if os.path.isdir(public_folder):
             shutil.rmtree(public_folder)
             os.mkdir(public_folder)
-            copy_dir_files(static_folder, public_folder)
+        
+        copy_dir_files(static_folder, public_folder)
 
     except OSError as e:
         print(f"Failed - error: {e}")
@@ -264,4 +284,36 @@ def extract_title(markdown):
         raise Exception("No title specified!")
     
     return title_matches[0].strip()
+
+def generate_page(from_path, template_path, dest_path):
+    print(f"Generating page from {from_path} to {dest_path} using {template_path}\n\n")
+    markdown = ''
+    template = ''
+
+    with open(from_path, 'r') as file:
+        markdown = file.read()
+
+    with open(template_path, 'r') as file:
+        template = file.read()
+
+    title = extract_title(markdown)
+
+    template = template.replace(r"{{ Title }}", title)
+
+    content = markdown_to_html_node(markdown).to_html()
+
+    template = template.replace(r"{{ Content }}", content)
+
+    # if not os.path.exists(dest_path):
+    #     dirs = os.path.dirname(dest_path)
+    #     os.makedirs(dirs)
+
+    f = open(dest_path, "w")
+    f.write(template)
+    f.close()       
+        
+    
+
+    return
+
     

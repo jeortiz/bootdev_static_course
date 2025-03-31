@@ -1,12 +1,12 @@
-import os
-import shutil
 import sys
 
-from utils.utils import publish_static_files
+from utils.utils import generate_page, publish_static_files
 
 def main() -> int:
 
     publish_static_files()
+
+    generate_page('content/index.md', 'template.html', 'public/index.html')
 
     return 0
 
