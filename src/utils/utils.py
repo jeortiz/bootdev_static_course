@@ -249,7 +249,7 @@ def markdown_to_html_node(markdown):
 def publish_static_files():
     print('\nCopying static files\n')
     static_folder = 'static'
-    public_folder = 'public'
+    public_folder = 'docs'
 
     try:
         if os.path.exists(public_folder):
