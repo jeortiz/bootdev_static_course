@@ -306,8 +306,8 @@ def generate_page(from_path, template_path, dest_path, basepath= "/"):
 
     template = template.replace(r"{{ Content }}", content)
 
-    template = template.replace('href="/', f'href="{basepath}')
-    template = template.replace('src="/', f'src="{basepath}')
+    template = template.replace(r'href="/', f'href="{basepath}')
+    template = template.replace(r'src="/', f'src="{basepath}')
 
     if not os.path.exists(dest_path):
         dirs = os.path.dirname(dest_path)
